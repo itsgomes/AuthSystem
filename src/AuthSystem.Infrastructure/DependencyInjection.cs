@@ -18,12 +18,21 @@ public static class DependencyInjection
       options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
     });
 
+    services
+      .AddOptions<JwtSettings>()
+      .Bind(configuration.GetSection("Jwt"))
+      .Validate(settings => !string.IsNullOrWhiteSpace(settings.SecretKey), "JWT SecretKey is required.")
+      .Validate(settings => settings.SecretKey.Length > 32, "JWT SecretKey must have at least 32 characters.")
+      .Validate(settings => settings.ExpirationInMinutes > 0, "JWT expiration must be greater than zero.")
+      .ValidateOnStart();
+
     services.AddScoped<IUserRepository, UserRepository>();
     services.AddScoped<IRoleRepository, RoleRepository>();
     services.AddScoped<IPermissionRepository, PermissionRepository>();
     services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     services.AddScoped<IUnitOfWork, UnitOfWork>();
     services.AddScoped<IPasswordHasher, PasswordHasher>();
+    services.AddScoped<IAccessTokenGenerator, JwtAccessTokenGenerator>();
 
     return services;
   }

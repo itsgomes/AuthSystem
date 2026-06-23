@@ -6,7 +6,8 @@ namespace AuthSystem.Application.UseCases.Users.LoginUser;
 
 public sealed class LoginUserUseCase(
   IUserRepository userRepository,
-  IPasswordHasher passwordHasher)
+  IPasswordHasher passwordHasher,
+  IAccessTokenGenerator accessTokenGenerator)
 {
   public async Task<Result<LoginUserResponse>> ExecuteAsync(
     LoginUserRequest request, 
@@ -32,8 +33,10 @@ public sealed class LoginUserUseCase(
       return Result<LoginUserResponse>.Failure(LoginUserErrors.InvalidCredentials);
     }
 
+    var accessToken = accessTokenGenerator.Generate(user);
+
     return Result<LoginUserResponse>.Success(
-      new LoginUserResponse(user.Id, user.Name, user.Email));
+      new LoginUserResponse(user.Id, user.Name, user.Email, accessToken));
   }
 
   private static Error? Validate(LoginUserRequest request)
