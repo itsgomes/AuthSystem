@@ -34,16 +34,25 @@ public sealed class RefreshTokenUseCase(
     var user = existingRefreshToken.User;
     var accessToken = accessTokenGenerator.Generate(user);
     var refreshTokenValue = refreshTokenGenerator.Generate();
-
-    existingRefreshToken.Revoke();
     
     var newRefreshToken = new RefreshTokenEntity(
       refreshTokenValue,
       DateTime.UtcNow.AddDays(7),
       user.Id);
 
+    existingRefreshToken.Revoke("Rotated", newRefreshToken.Id);
+
     await refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
-    await unitOfWork.SaveChangesAsync(cancellationToken);
+
+    try
+    {      
+      await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+    catch (ConcurrencyException)
+    {
+      return Result<RefreshTokenResponse>.Failure(
+        RefreshTokenErrors.InvalidRefreshToken);
+    }
 
     return Result<RefreshTokenResponse>.Success(
       new RefreshTokenResponse(

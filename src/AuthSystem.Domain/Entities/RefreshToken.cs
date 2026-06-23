@@ -7,6 +7,10 @@ public class RefreshToken
 	public DateTime CreatedAt { get; private set; }
 	public DateTime ExpiresAt { get; private set; }
 	public DateTime? RevokedAt { get; private set; }
+	public string? RevokedReason { get; private set; }
+	public Guid? ReplacedByTokenId { get; private set; }
+	public int Version { get; private set; }
+	
 	public Guid UserId { get; private set; }
 	public User User { get; private set; } = null!;
 
@@ -34,11 +38,17 @@ public class RefreshToken
 		UserId = userId;
 	}
 
-	public void Revoke()
+	public void Revoke(string revokedReason, Guid? replacedByTokenId = null)
 	{
 		if (IsRevoked)
 			return;
 
+		if (string.IsNullOrWhiteSpace(revokedReason))
+			throw new ArgumentException("Revoked reason is required.");
+
 		RevokedAt = DateTime.UtcNow;
+		RevokedReason = revokedReason;
+		ReplacedByTokenId = replacedByTokenId;
+		Version++;
 	}
 }

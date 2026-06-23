@@ -24,6 +24,15 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
     builder.Property(x => x.RevokedAt);
 
+    builder.Property(x => x.RevokedReason)
+      .HasMaxLength(100);
+
+    builder.Property(x => x.ReplacedByTokenId);
+
+    builder.Property(x => x.Version)
+      .IsRequired()
+      .IsConcurrencyToken();
+
     builder.HasOne(x => x.User)
       .WithMany(x => x.RefreshTokens)
       .HasForeignKey(x => x.UserId)
