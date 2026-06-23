@@ -1,4 +1,5 @@
 using AuthSystem.Application.UseCases.Users.LoginUser;
+using AuthSystem.Application.UseCases.Users.RefreshToken;
 using AuthSystem.Application.UseCases.Users.RegisterUser;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ public static class DependencyInjection
   {
     services.AddScoped<RegisterUserUseCase>();
     services.AddScoped<LoginUserUseCase>();
+    services.AddScoped<RefreshTokenUseCase>();
 
     return services;
   }

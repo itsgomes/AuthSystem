@@ -1,13 +1,17 @@
 using AuthSystem.Application.Abstractions.Persistence;
 using AuthSystem.Application.Abstractions.Security;
 using AuthSystem.Application.Common;
+using RefreshTokenEntity = AuthSystem.Domain.Entities.RefreshToken;
 
 namespace AuthSystem.Application.UseCases.Users.LoginUser;
 
 public sealed class LoginUserUseCase(
   IUserRepository userRepository,
   IPasswordHasher passwordHasher,
-  IAccessTokenGenerator accessTokenGenerator)
+  IAccessTokenGenerator accessTokenGenerator,
+  IRefreshTokenGenerator refreshTokenGenerator,
+  IRefreshTokenRepository refreshTokenRepository,
+  IUnitOfWork unitOfWork)
 {
   public async Task<Result<LoginUserResponse>> ExecuteAsync(
     LoginUserRequest request, 
@@ -34,9 +38,22 @@ public sealed class LoginUserUseCase(
     }
 
     var accessToken = accessTokenGenerator.Generate(user);
+    var refreshTokenValue = refreshTokenGenerator.Generate();
+    var refreshToken = new RefreshTokenEntity(
+      refreshTokenValue,
+      DateTime.UtcNow.AddDays(7),
+      user.Id);
+
+    await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+    await unitOfWork.SaveChangesAsync(cancellationToken);
 
     return Result<LoginUserResponse>.Success(
-      new LoginUserResponse(user.Id, user.Name, user.Email, accessToken));
+      new LoginUserResponse(
+        user.Id,
+        user.Name,
+        user.Email,
+        accessToken,
+        refreshTokenValue));
   }
 
   private static Error? Validate(LoginUserRequest request)

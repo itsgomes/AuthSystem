@@ -22,7 +22,7 @@ public static class DependencyInjection
       .AddOptions<JwtSettings>()
       .Bind(configuration.GetSection("Jwt"))
       .Validate(settings => !string.IsNullOrWhiteSpace(settings.SecretKey), "JWT SecretKey is required.")
-      .Validate(settings => settings.SecretKey.Length > 32, "JWT SecretKey must have at least 32 characters.")
+      .Validate(settings => settings.SecretKey.Length >= 32, "JWT SecretKey must have at least 32 characters.")
       .Validate(settings => settings.ExpirationInMinutes > 0, "JWT expiration must be greater than zero.")
       .ValidateOnStart();
 
@@ -33,6 +33,7 @@ public static class DependencyInjection
     services.AddScoped<IUnitOfWork, UnitOfWork>();
     services.AddScoped<IPasswordHasher, PasswordHasher>();
     services.AddScoped<IAccessTokenGenerator, JwtAccessTokenGenerator>();
+    services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
 
     return services;
   }

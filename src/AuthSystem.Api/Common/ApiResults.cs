@@ -2,6 +2,7 @@ using AuthSystem.Application.Common;
 using AuthSystem.Application.UseCases.Users.LoginUser;
 using AuthSystem.Application.UseCases.Users.RegisterUser;
 using Microsoft.AspNetCore.Mvc;
+using AuthSystem.Application.UseCases.Users.RefreshToken;
 
 namespace AuthSystem.Api.Common;
 
@@ -9,16 +10,15 @@ public static class ApiResults
 {
   public static IActionResult FromError(Error error)
   {
-    if (error.Code == RegisterUserErrors.EmailAlreadyExists.Code)
+    return error.Code switch
     {
-      return new ConflictObjectResult(error);
-    }
+      var code when code == RegisterUserErrors.EmailAlreadyExists.Code => new ConflictObjectResult(error),
+      
+      var code when 
+        code == LoginUserErrors.InvalidCredentials.Code || 
+        code == RefreshTokenErrors.InvalidRefreshToken.Code => new UnauthorizedObjectResult(error),
 
-    if (error.Code == LoginUserErrors.InvalidCredentials.Code)
-    {
-      return new UnauthorizedObjectResult(error);
-    }
-
-    return new BadRequestObjectResult(error);
+      _ => new BadRequestObjectResult(error)
+    };
   }
 }

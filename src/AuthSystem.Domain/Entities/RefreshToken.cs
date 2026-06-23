@@ -4,10 +4,15 @@ public class RefreshToken
 {
 	public Guid Id { get; private set; }
 	public string Token { get; private set; } = string.Empty;
+	public DateTime CreatedAt { get; private set; }
 	public DateTime ExpiresAt { get; private set; }
-	public bool Revoked { get; private set; }
+	public DateTime? RevokedAt { get; private set; }
 	public Guid UserId { get; private set; }
 	public User User { get; private set; } = null!;
+
+	public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+	public bool IsRevoked => RevokedAt is not null;
+	public bool IsActive => !IsRevoked && !IsExpired;
 
 	private RefreshToken()
 	{
@@ -15,12 +20,25 @@ public class RefreshToken
 
 	public RefreshToken(string token, DateTime expiresAt, Guid userId)
 	{
-		Id = Guid.NewGuid();
+		if (string.IsNullOrWhiteSpace(token))
+			throw new ArgumentException("Refresh token is required.");
 
+		if (expiresAt <= DateTime.UtcNow)
+			throw new ArgumentException("Refresh token expiration must be in the future.");
+
+		Id = Guid.NewGuid();
+		
 		Token = token;
+		CreatedAt = DateTime.UtcNow;
 		ExpiresAt = expiresAt;
 		UserId = userId;
+	}
 
-		Revoked = false;
+	public void Revoke()
+	{
+		if (IsRevoked)
+			return;
+
+		RevokedAt = DateTime.UtcNow;
 	}
 }

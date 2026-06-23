@@ -12,6 +12,7 @@ public class RefreshTokenRepository(AppDbContext context) : IRefreshTokenReposit
   public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
   {
     return await _context.RefreshTokens
+      .Include(refreshToken => refreshToken.User)
       .FirstOrDefaultAsync(refreshToken => refreshToken.Token == token, cancellationToken);
   }
 
