@@ -1,5 +1,6 @@
 using AuthSystem.Api.Common;
 using AuthSystem.Application.UseCases.Users.LoginUser;
+using AuthSystem.Application.UseCases.Users.LogoutUser;
 using AuthSystem.Application.UseCases.Users.RefreshToken;
 using AuthSystem.Application.UseCases.Users.RegisterUser;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,8 @@ namespace AuthSystem.Api.Controllers;
 public sealed class AuthController(
   RefreshTokenUseCase refreshTokenUseCase,
   RegisterUserUseCase registerUserUseCase, 
-  LoginUserUseCase loginUserUseCase) : ControllerBase
+  LoginUserUseCase loginUserUseCase,
+  LogoutUserUseCase logoutUserUseCase) : ControllerBase
 {
   [HttpPost("refresh")]
   public async Task<IActionResult> RefreshToken(
@@ -56,5 +58,20 @@ public sealed class AuthController(
     }
 
     return Ok(result.Value);
+  }
+
+  [HttpPost("logout")]
+  public async Task<IActionResult> Logout(
+    LogoutUserRequest request,
+    CancellationToken cancellationToken)
+  {
+    var result = await logoutUserUseCase.ExecuteAsync(request, cancellationToken);
+
+    if (result.IsFailure)
+    {
+      return ApiResults.FromError(result.Error!);
+    }
+
+    return NoContent();
   }
 }

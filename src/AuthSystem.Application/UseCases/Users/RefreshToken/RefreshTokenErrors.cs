@@ -11,4 +11,8 @@ public static class RefreshTokenErrors
   public static readonly Error InvalidRefreshToken = new(
     "RefreshToken.Invalid",
     "Refresh token is invalid.");
+
+  public static readonly Error RefreshTokenReused = new(
+    "RefreshToken.Reused",
+    "Refresh token reuse detected.");
 }

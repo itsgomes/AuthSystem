@@ -2,6 +2,10 @@
 
 public class RefreshToken
 {
+	public const string RotatedReason = "Rotated";
+	public const string ReuseDetectedReason = "ReuseDetected";
+	public const string LogoutReason = "Logout";
+
 	public Guid Id { get; private set; }
 	public string Token { get; private set; } = string.Empty;
 	public DateTime CreatedAt { get; private set; }
@@ -17,6 +21,7 @@ public class RefreshToken
 	public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
 	public bool IsRevoked => RevokedAt is not null;
 	public bool IsActive => !IsRevoked && !IsExpired;
+	public bool WasRevokedByRotation => IsRevoked && RevokedReason == RotatedReason && ReplacedByTokenId is not null;
 
 	private RefreshToken()
 	{
@@ -50,5 +55,15 @@ public class RefreshToken
 		RevokedReason = revokedReason;
 		ReplacedByTokenId = replacedByTokenId;
 		Version++;
+	}
+
+	public void RevokeDueToReuseDetected()
+	{
+		Revoke(ReuseDetectedReason);
+	}
+
+	public void RevokeDueToLogout()
+	{
+		Revoke(LogoutReason);
 	}
 }

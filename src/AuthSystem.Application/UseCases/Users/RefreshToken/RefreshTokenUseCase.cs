@@ -2,6 +2,7 @@ using AuthSystem.Application.Abstractions.Persistence;
 using AuthSystem.Application.Abstractions.Security;
 using AuthSystem.Application.Common;
 using RefreshTokenEntity = AuthSystem.Domain.Entities.RefreshToken;
+using Microsoft.Extensions.Logging;
 
 namespace AuthSystem.Application.UseCases.Users.RefreshToken;
 
@@ -9,6 +10,7 @@ public sealed class RefreshTokenUseCase(
   IRefreshTokenRepository refreshTokenRepository,
   IAccessTokenGenerator accessTokenGenerator,
   IRefreshTokenGenerator refreshTokenGenerator,
+  ILogger<RefreshTokenUseCase> logger,
   IUnitOfWork unitOfWork)
 {
   public async Task<Result<RefreshTokenResponse>> ExecuteAsync(
@@ -25,12 +27,55 @@ public sealed class RefreshTokenUseCase(
       request.RefreshToken,
       cancellationToken);
 
-    if (existingRefreshToken is null || !existingRefreshToken.IsActive)
+    if (existingRefreshToken is null)
+    {
+      return Result<RefreshTokenResponse>.Failure(
+        RefreshTokenErrors.InvalidRefreshToken);
+    }
+
+    if (existingRefreshToken.WasRevokedByRotation)
+    {
+      return await HandleRefreshTokenReuseAsync(existingRefreshToken, cancellationToken);
+    }
+
+    if (!existingRefreshToken.IsActive)
     {
       return Result<RefreshTokenResponse>.Failure(
         RefreshTokenErrors.InvalidRefreshToken);
     }
     
+    return await RotateRefreshTokenAsync(existingRefreshToken, cancellationToken);
+  }
+
+  private async Task<Result<RefreshTokenResponse>> HandleRefreshTokenReuseAsync(
+    RefreshTokenEntity existingRefreshToken,
+    CancellationToken cancellationToken)
+  {
+    logger.LogWarning(
+      "Refresh token reuse detected. UserId: {UserId}, RefreshTokenId: {RefreshTokenId}, ReplacedByTokenId: {ReplacedByTokenId}",
+      existingRefreshToken.UserId,
+      existingRefreshToken.Id,
+      existingRefreshToken.ReplacedByTokenId);
+
+    var activeRefreshTokens = await refreshTokenRepository.GetActiveByUserIdAsync(
+      existingRefreshToken.UserId,
+      cancellationToken);
+
+    foreach (var refreshToken in activeRefreshTokens)
+    {
+      refreshToken.RevokeDueToReuseDetected();
+    }
+
+    await unitOfWork.SaveChangesAsync(cancellationToken);
+
+    return Result<RefreshTokenResponse>.Failure(
+      RefreshTokenErrors.RefreshTokenReused);
+  }
+
+  private async Task<Result<RefreshTokenResponse>> RotateRefreshTokenAsync(
+    RefreshTokenEntity existingRefreshToken,
+    CancellationToken cancellationToken)
+  {
     var user = existingRefreshToken.User;
     var accessToken = accessTokenGenerator.Generate(user);
     var refreshTokenValue = refreshTokenGenerator.Generate();
@@ -40,7 +85,9 @@ public sealed class RefreshTokenUseCase(
       DateTime.UtcNow.AddDays(7),
       user.Id);
 
-    existingRefreshToken.Revoke("Rotated", newRefreshToken.Id);
+    existingRefreshToken.Revoke(
+      RefreshTokenEntity.RotatedReason, 
+      newRefreshToken.Id);
 
     await refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
 
@@ -53,7 +100,7 @@ public sealed class RefreshTokenUseCase(
       return Result<RefreshTokenResponse>.Failure(
         RefreshTokenErrors.InvalidRefreshToken);
     }
-
+ 
     return Result<RefreshTokenResponse>.Success(
       new RefreshTokenResponse(
         accessToken,

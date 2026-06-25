@@ -16,7 +16,9 @@ public static class ApiResults
       
       var code when 
         code == LoginUserErrors.InvalidCredentials.Code || 
-        code == RefreshTokenErrors.InvalidRefreshToken.Code => new UnauthorizedObjectResult(error),
+        code == RefreshTokenErrors.InvalidRefreshToken.Code ||
+        code == RefreshTokenErrors.RefreshTokenReused.Code
+          => new UnauthorizedObjectResult(error),
 
       _ => new BadRequestObjectResult(error)
     };

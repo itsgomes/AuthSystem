@@ -206,6 +206,22 @@ Resposta esperada:
 }
 ```
 
+### Logout
+
+```http
+POST /api/auth/logout
+Content-Type: application/json
+```
+
+```json
+{
+  "refreshToken": "<refresh-token>"
+}
+```
+
+Resposta esperada:
+Status HTTP: 204
+
 ## Comandos uteis
 
 Parar o banco:
