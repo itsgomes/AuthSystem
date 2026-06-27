@@ -22,6 +22,9 @@ public static class AuthenticationExtensions
           ValidateAudience = true,
           ValidateLifetime = true,
           ValidateIssuerSigningKey = true,
+
+          ClockSkew = TimeSpan.FromSeconds(30),
+
           ValidIssuer = jwtSettings["Issuer"],
           ValidAudience = jwtSettings["Audience"],
           IssuerSigningKey = new SymmetricSecurityKey(
