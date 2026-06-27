@@ -11,17 +11,23 @@ namespace AuthSystem.Infrastructure.Security;
 public sealed class JwtAccessTokenGenerator(
   IOptions<JwtSettings> jwtOptions) : IAccessTokenGenerator
 {
-  public string Generate(User user)
+  public string Generate(
+    User user,
+    IReadOnlyCollection<string> permissions)
   {
     var settings = jwtOptions.Value;
 
-    var claims = new[]
+    var claims = new List<Claim>
     {
-      new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-      new Claim(JwtRegisteredClaimNames.Email, user.Email),
-      new Claim(JwtRegisteredClaimNames.Name, user.Name),
-      new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+      new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+      new(JwtRegisteredClaimNames.Email, user.Email),
+      new(JwtRegisteredClaimNames.Name, user.Name),
+      new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
+
+    claims.AddRange(
+      permissions.Select(permission =>
+        new Claim(JwtClaimNames.Permission, permission)));
 
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.SecretKey));
     var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

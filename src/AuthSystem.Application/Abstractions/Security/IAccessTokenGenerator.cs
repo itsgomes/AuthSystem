@@ -4,5 +4,7 @@ namespace AuthSystem.Application.Abstractions.Security;
 
 public interface IAccessTokenGenerator
 {
-  string Generate(User user);
+  string Generate(
+    User user,
+    IReadOnlyCollection<string> permissions);
 }

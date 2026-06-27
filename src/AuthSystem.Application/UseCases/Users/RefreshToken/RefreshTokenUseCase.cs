@@ -3,11 +3,13 @@ using AuthSystem.Application.Abstractions.Security;
 using AuthSystem.Application.Common;
 using RefreshTokenEntity = AuthSystem.Domain.Entities.RefreshToken;
 using Microsoft.Extensions.Logging;
+using AuthSystem.Domain.Entities;
 
 namespace AuthSystem.Application.UseCases.Users.RefreshToken;
 
 public sealed class RefreshTokenUseCase(
   IRefreshTokenRepository refreshTokenRepository,
+  IPermissionRepository permissionRepository,
   IAccessTokenGenerator accessTokenGenerator,
   IRefreshTokenGenerator refreshTokenGenerator,
   ILogger<RefreshTokenUseCase> logger,
@@ -77,7 +79,8 @@ public sealed class RefreshTokenUseCase(
     CancellationToken cancellationToken)
   {
     var user = existingRefreshToken.User;
-    var accessToken = accessTokenGenerator.Generate(user);
+
+    var accessToken = await GenerateAccessTokenAsync(user, cancellationToken);
     var refreshTokenValue = refreshTokenGenerator.Generate();
     
     var newRefreshToken = new RefreshTokenEntity(
@@ -105,5 +108,16 @@ public sealed class RefreshTokenUseCase(
       new RefreshTokenResponse(
         accessToken,
         refreshTokenValue));
+  }
+
+  private async Task<string> GenerateAccessTokenAsync(
+    User user,
+    CancellationToken cancellationToken)
+  {
+    var permissions = await permissionRepository.GetByUserIdAsync(
+      user.Id,
+      cancellationToken);
+
+    return accessTokenGenerator.Generate(user, permissions);
   }
 }

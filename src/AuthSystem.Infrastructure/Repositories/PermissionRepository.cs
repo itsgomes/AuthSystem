@@ -21,12 +21,12 @@ public class PermissionRepository(AppDbContext context) : IPermissionRepository
       .SingleOrDefaultAsync(permission => permission.Name == name, cancellationToken);
   }
 
-  public async Task<IReadOnlyList<Permission>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+  public async Task<IReadOnlyList<string>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
   {
     return await _context.UserRoles
       .Where(userRole => userRole.UserId == userId)
       .SelectMany(userRole => userRole.Role.RolePermissions)
-      .Select(rolePermission => rolePermission.Permission)
+      .Select(rolePermission => rolePermission.Permission.Name)
       .Distinct()
       .ToListAsync(cancellationToken);
   }
