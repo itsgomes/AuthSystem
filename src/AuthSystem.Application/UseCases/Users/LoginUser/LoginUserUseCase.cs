@@ -53,8 +53,13 @@ public sealed class LoginUserUseCase(
       return null;
     }
 
-    var passwordIsValid = passwordHasher.Verify(request.Password, user.PasswordHash);
-    return passwordIsValid ? user : null;
+    var passwordIsValid = passwordHasher.Verify(
+      request.Password, 
+      user.PasswordHash);
+
+    return passwordIsValid && user.Active
+      ? user 
+      : null;
   }
 
   private async Task<string> GenerateAccessTokenAsync(

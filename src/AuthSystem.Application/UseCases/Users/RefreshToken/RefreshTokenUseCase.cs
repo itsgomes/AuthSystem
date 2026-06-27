@@ -45,6 +45,12 @@ public sealed class RefreshTokenUseCase(
       return Result<RefreshTokenResponse>.Failure(
         RefreshTokenErrors.InvalidRefreshToken);
     }
+
+    if (!existingRefreshToken.User.Active)
+    {
+      return Result<RefreshTokenResponse>.Failure(
+        RefreshTokenErrors.InvalidRefreshToken);
+    }
     
     return await RotateRefreshTokenAsync(existingRefreshToken, cancellationToken);
   }

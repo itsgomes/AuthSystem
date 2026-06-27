@@ -43,4 +43,14 @@ public class User : Entity
 		UserRoles = [];
 		RefreshTokens = [];
 	}
+
+	public void Activate()
+	{
+		Active = true;
+	}
+
+	public void Deactivate()
+	{
+		Active = false;
+	}
 }
