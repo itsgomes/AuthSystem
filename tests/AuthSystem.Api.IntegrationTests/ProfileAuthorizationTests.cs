@@ -61,7 +61,7 @@ public sealed class ProfileAuthorization(
   }
 
   [Fact]
-  public async Task Me_WithTokenSignedByUnknowKey_Returns401()
+  public async Task Me_WithTokenSignedByUnknownKey_Returns401()
   {
     using var client = CreateClient();
 
