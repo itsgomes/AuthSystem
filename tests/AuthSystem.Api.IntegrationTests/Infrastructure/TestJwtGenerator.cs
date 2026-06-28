@@ -3,14 +3,11 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AuthSystem.Api.IntegrationTests;
+namespace AuthSystem.Api.IntegrationTests.Infrastructure;
 
 internal static class TestJwtGenerator
 {
-  public static string Generate(
-    string? permission = null,
-    string? secretKey = null,
-    DateTime? expiresAt = null)
+  public static string Generate(string? permission = null, string? secretKey = null, DateTime? expiresAt = null)
   {
     var claims = new List<Claim>
     {
@@ -24,14 +21,8 @@ internal static class TestJwtGenerator
       claims.Add(new Claim("permission", permission));
     }
 
-    var key = new SymmetricSecurityKey(
-      Encoding.UTF8.GetBytes(
-        secretKey ?? AuthSystemApiFactory.SecretKey));
-
-    var credentials = new SigningCredentials(
-      key,
-      SecurityAlgorithms.HmacSha256);
-
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey ?? AuthSystemApiFactory.SecretKey));
+    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
     var token = new JwtSecurityToken(
       issuer: "AuthSystem.Tests",
       audience: "AuthSystem.Tests",

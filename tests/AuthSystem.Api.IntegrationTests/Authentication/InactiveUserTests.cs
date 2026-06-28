@@ -1,12 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
+using AuthSystem.Api.IntegrationTests.Infrastructure;
 using AuthSystem.Application.UseCases.Users.LoginUser;
 using AuthSystem.Application.UseCases.Users.RefreshToken;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace AuthSystem.Api.IntegrationTests;
+namespace AuthSystem.Api.IntegrationTests.Authentication;
 
-public sealed class InactiveUserTests(PostgreSqlApiFactory factory) : IClassFixture<PostgreSqlApiFactory>
+[Collection(PostgreSqlCollection.Name)]
+public sealed class InactiveUserTests(PostgreSqlApiFactory factory)
 {
   private const string Password = "Password@123";
 
@@ -55,7 +57,11 @@ public sealed class InactiveUserTests(PostgreSqlApiFactory factory) : IClassFixt
 
   private HttpClient CreateClient()
   {
-    return factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+    return factory.CreateClient(
+      new WebApplicationFactoryClientOptions
+      {
+        BaseAddress = new Uri("https://localhost")
+      });
   }
 
   private static async Task RegisterUserAsync(HttpClient client, string email)

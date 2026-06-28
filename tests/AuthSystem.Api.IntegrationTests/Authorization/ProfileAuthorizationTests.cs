@@ -1,12 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
+using AuthSystem.Api.IntegrationTests.Infrastructure;
 using AuthSystem.Application.Authorization;
+using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace AuthSystem.Api.IntegrationTests;
+namespace AuthSystem.Api.IntegrationTests.Authorization;
 
-public sealed class ProfileAuthorization(
-  AuthSystemApiFactory factory)
-  : IClassFixture<AuthSystemApiFactory>
+public sealed class ProfileAuthorization(AuthSystemApiFactory factory) : IClassFixture<AuthSystemApiFactory>
 {
   [Fact]
   public async Task Me_WithoutAccessToken_Returns401()
@@ -22,6 +22,7 @@ public sealed class ProfileAuthorization(
   public async Task Me_WithoutRequiredPermission_Returns403()
   {
     using var client = CreateClient();
+    
     AddBearerToken(client, TestJwtGenerator.Generate());
 
     var response = await client.GetAsync("/api/profile/me");
@@ -34,8 +35,7 @@ public sealed class ProfileAuthorization(
   {
     using var client = CreateClient();
     
-    var token = TestJwtGenerator.Generate(
-      Permissions.ProfileRead);
+    var token = TestJwtGenerator.Generate(Permissions.ProfileRead);
 
     AddBearerToken(client, token);
 
@@ -79,20 +79,14 @@ public sealed class ProfileAuthorization(
   private HttpClient CreateClient()
   {
     return factory.CreateClient(
-      new Microsoft.AspNetCore.Mvc.Testing
-        .WebApplicationFactoryClientOptions
+      new WebApplicationFactoryClientOptions
       {
         BaseAddress = new Uri("https://localhost")
       });
   }
 
-  private static void AddBearerToken(
-    HttpClient client,
-    string accessToken)
+  private static void AddBearerToken(HttpClient client, string accessToken)
   {
-    client.DefaultRequestHeaders.Authorization =
-      new AuthenticationHeaderValue(
-        "Bearer",
-        accessToken);
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
   }
 }
