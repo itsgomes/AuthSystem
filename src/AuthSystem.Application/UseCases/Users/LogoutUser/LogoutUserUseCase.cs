@@ -1,9 +1,11 @@
 using AuthSystem.Application.Abstractions.Persistence;
+using AuthSystem.Application.Abstractions.Security;
 using AuthSystem.Application.Common;
 
 namespace AuthSystem.Application.UseCases.Users.LogoutUser;
 
 public sealed class LogoutUserUseCase(
+  IRefreshTokenHasher refreshTokenHasher,
   IRefreshTokenRepository refreshTokenRepository,
   IUnitOfWork unitOfWork)
 {
@@ -14,8 +16,9 @@ public sealed class LogoutUserUseCase(
       return Result.Failure(LogoutUserErrors.RefreshTokenRequired);
     }
 
-    var refreshToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);
+    var refreshTokenHash = refreshTokenHasher.Hash(request.RefreshToken);
 
+    var refreshToken = await refreshTokenRepository.GetByTokenHashAsync(refreshTokenHash, cancellationToken);
     if (refreshToken is null || !refreshToken.IsActive)
     {
       return Result.Failure(LogoutUserErrors.InvalidRefreshToken);

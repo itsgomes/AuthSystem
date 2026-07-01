@@ -34,6 +34,7 @@ public static class DependencyInjection
     services.AddScoped<IPasswordHasher, PasswordHasher>();
     services.AddScoped<IAccessTokenGenerator, JwtAccessTokenGenerator>();
     services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
+    services.AddScoped<IRefreshTokenHasher, RefreshTokenHasher>();
 
     return services;
   }

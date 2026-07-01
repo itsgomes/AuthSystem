@@ -11,6 +11,7 @@ public sealed class LoginUserUseCase(
   IPasswordHasher passwordHasher,
   IAccessTokenGenerator accessTokenGenerator,
   IRefreshTokenGenerator refreshTokenGenerator,
+  IRefreshTokenHasher refreshTokenHasher,
   IRefreshTokenRepository refreshTokenRepository,
   IPermissionRepository permissionRepository,
   IUnitOfWork unitOfWork)
@@ -30,13 +31,17 @@ public sealed class LoginUserUseCase(
     }
 
     var accessToken = await GenerateAccessTokenAsync(user, cancellationToken);
-    var refreshToken = CreateRefreshToken(user);
+
+    var refreshTokenValue = refreshTokenGenerator.Generate();
+
+    var refreshToken = CreateRefreshToken(user, refreshTokenValue);
 
     await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+
     await unitOfWork.SaveChangesAsync(cancellationToken);
 
     return Result<LoginUserResponse>.Success(
-      CreateResponse(user, accessToken, refreshToken.Token));
+      CreateResponse(user, accessToken, refreshTokenValue));
   }
 
   private async Task<User?> GetAuthenticatedUserAsync(LoginUserRequest request, CancellationToken cancellationToken)
@@ -63,11 +68,11 @@ public sealed class LoginUserUseCase(
     return accessTokenGenerator.Generate(user, permissions);
   }
 
-  private RefreshTokenEntity CreateRefreshToken(User user)
+  private RefreshTokenEntity CreateRefreshToken(User user, string refreshTokenValue)
   {
-    var refreshTokenValue = refreshTokenGenerator.Generate();
+    var refreshTokenHash = refreshTokenHasher.Hash(refreshTokenValue);
 
-    return new RefreshTokenEntity(refreshTokenValue, DateTime.UtcNow.AddDays(7), user.Id);
+    return new RefreshTokenEntity(refreshTokenHash, DateTime.UtcNow.AddDays(7), user.Id);
   }
 
   private static LoginUserResponse CreateResponse(User user, string accessToken, string refreshToken)

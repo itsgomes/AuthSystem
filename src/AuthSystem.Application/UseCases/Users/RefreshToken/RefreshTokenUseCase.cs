@@ -12,6 +12,7 @@ public sealed class RefreshTokenUseCase(
   IPermissionRepository permissionRepository,
   IAccessTokenGenerator accessTokenGenerator,
   IRefreshTokenGenerator refreshTokenGenerator,
+  IRefreshTokenHasher refreshTokenHasher,
   ILogger<RefreshTokenUseCase> logger,
   IUnitOfWork unitOfWork)
 {
@@ -22,7 +23,9 @@ public sealed class RefreshTokenUseCase(
       return Result<RefreshTokenResponse>.Failure(RefreshTokenErrors.RefreshTokenRequired);
     }
 
-    var existingRefreshToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);
+    var refreshTokenHash = refreshTokenHasher.Hash(request.RefreshToken);
+
+    var existingRefreshToken = await refreshTokenRepository.GetByTokenHashAsync(refreshTokenHash, cancellationToken);
     if (existingRefreshToken is null)
     {
       return Result<RefreshTokenResponse>.Failure(RefreshTokenErrors.InvalidRefreshToken);
@@ -71,9 +74,12 @@ public sealed class RefreshTokenUseCase(
     var user = existingRefreshToken.User;
 
     var accessToken = await GenerateAccessTokenAsync(user, cancellationToken);
+
     var refreshTokenValue = refreshTokenGenerator.Generate();
+
+    var refreshTokenHash = refreshTokenHasher.Hash(refreshTokenValue);
     
-    var newRefreshToken = new RefreshTokenEntity(refreshTokenValue, DateTime.UtcNow.AddDays(7), user.Id);
+    var newRefreshToken = new RefreshTokenEntity(refreshTokenHash, DateTime.UtcNow.AddDays(7), user.Id);
 
     existingRefreshToken.Revoke(RefreshTokenEntity.RotatedReason, newRefreshToken.Id);
 

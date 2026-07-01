@@ -9,11 +9,11 @@ public class RefreshTokenRepository(AppDbContext context) : IRefreshTokenReposit
 {
   private readonly AppDbContext _context = context;
 
-  public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
+  public async Task<RefreshToken?> GetByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default)
   {
     return await _context.RefreshTokens
       .Include(refreshToken => refreshToken.User)
-      .FirstOrDefaultAsync(refreshToken => refreshToken.Token == token, cancellationToken);
+      .FirstOrDefaultAsync(refreshToken => refreshToken.TokenHash == tokenHash, cancellationToken);
   }
 
   public async Task<IReadOnlyList<RefreshToken>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)

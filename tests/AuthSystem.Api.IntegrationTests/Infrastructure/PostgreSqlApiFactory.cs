@@ -1,3 +1,4 @@
+using AuthSystem.Application.Abstractions.Security;
 using AuthSystem.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -64,11 +65,17 @@ public sealed class PostgreSqlApiFactory : WebApplicationFactory<Program>, IAsyn
   {
     await using var scope = Services.CreateAsyncScope();
 
+    var serviceProvider = scope.ServiceProvider;
+
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    var tokenHasher = serviceProvider.GetRequiredService<IRefreshTokenHasher>();
+
+    var tokenHash = tokenHasher.Hash(token);
 
     return await dbContext.RefreshTokens
       .AsNoTracking()
-      .SingleOrDefaultAsync(refreshToken => refreshToken.Token == token);
+      .SingleOrDefaultAsync(refreshToken => refreshToken.TokenHash == tokenHash);
   }
 
   public async Task<IReadOnlyList<RefreshTokenEntity>> GetRefreshTokensByUserIdAsync(Guid userId)

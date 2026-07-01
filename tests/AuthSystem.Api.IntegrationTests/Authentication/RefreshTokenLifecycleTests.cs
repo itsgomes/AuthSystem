@@ -158,7 +158,27 @@ public sealed class RefreshTokenLifecycleTests(PostgreSqlApiFactory factory)
 
     var replacementToken = userTokens.Single(token => token.Id == originalToken.ReplacedByTokenId);
 
-    Assert.Equal(successfulRefresh.RefreshToken, replacementToken.Token);
+    var persistedSuccessfulToken = await factory.GetRefreshTokenAsync(successfulRefresh.RefreshToken);
+
+    Assert.NotNull(persistedSuccessfulToken);
+
+    Assert.Equal(replacementToken.Id,  persistedSuccessfulToken.Id);
+  }
+
+  [Fact]
+  public async Task Login_StoresOnlyRefreshTokenHash()
+  {
+    using var client = CreateClient();
+
+    var login = await RegisterAndLoginAsync(client);
+
+    var persistedToken = await factory.GetRefreshTokenAsync(login.RefreshToken);
+
+    Assert.NotNull(persistedToken);
+
+    Assert.NotEqual(login.RefreshToken, persistedToken.TokenHash);
+
+    Assert.Equal(64, persistedToken.TokenHash.Length);
   }
 
   public HttpClient CreateClient()
