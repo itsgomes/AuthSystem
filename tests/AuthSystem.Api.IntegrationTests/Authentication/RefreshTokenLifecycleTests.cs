@@ -106,6 +106,61 @@ public sealed class RefreshTokenLifecycleTests(PostgreSqlApiFactory factory)
     Assert.False(refreshToken.IsActive);
   }
 
+  [Fact]
+  public async Task ConcurrentRefresh_WithSameToken_AllowsOnlyOneRotation()
+  {
+    using var firstClient = CreateClient();
+    using var secondClient = CreateClient();
+
+    var login = await RegisterAndLoginAsync(firstClient);
+
+    var startGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    var request = new RefreshTokenRequest(login.RefreshToken);
+
+    var firstTask = SendRefreshAfterSignalAsync(firstClient, request, startGate.Task);
+    var secondTask = SendRefreshAfterSignalAsync(secondClient, request, startGate.Task);
+
+    startGate.SetResult(true);
+
+    var responses = await Task.WhenAll(firstTask, secondTask);
+
+    using var firstResponse = responses[0];
+    using var secondResponse = responses[1];
+
+    var successfulResponses = responses
+      .Where(response => response.StatusCode == HttpStatusCode.OK)
+      .ToList();
+
+    var unauthorizedResponses = responses
+      .Where(response => response.StatusCode == HttpStatusCode.Unauthorized)
+      .ToList();
+
+    Assert.Single(successfulResponses);
+    Assert.Single(unauthorizedResponses);
+
+    var successfulRefresh = await successfulResponses[0]
+      .Content
+      .ReadFromJsonAsync<RefreshTokenResponse>();
+
+    Assert.NotNull(successfulRefresh);
+
+    var originalToken = await factory.GetRefreshTokenAsync(login.RefreshToken);
+
+    Assert.NotNull(originalToken);
+
+    var userTokens = await factory.GetRefreshTokensByUserIdAsync(originalToken.UserId);
+
+    Assert.Equal(2, userTokens.Count);
+    Assert.Equal(RefreshTokenEntity.RotatedReason, originalToken.RevokedReason);
+
+    Assert.NotNull(originalToken.ReplacedByTokenId);
+
+    var replacementToken = userTokens.Single(token => token.Id == originalToken.ReplacedByTokenId);
+
+    Assert.Equal(successfulRefresh.RefreshToken, replacementToken.Token);
+  }
+
   public HttpClient CreateClient()
   {
     return factory.CreateClient(
@@ -142,5 +197,14 @@ public sealed class RefreshTokenLifecycleTests(PostgreSqlApiFactory factory)
     Assert.NotNull(login);
 
     return login;
+  }
+
+  private static async Task<HttpResponseMessage> SendRefreshAfterSignalAsync(HttpClient client, RefreshTokenRequest request, Task startSignal)
+  {
+    await startSignal;
+
+    return await client.PostAsJsonAsync(
+      "/api/auth/refresh", 
+      request);
   }
 }

@@ -71,6 +71,19 @@ public sealed class PostgreSqlApiFactory : WebApplicationFactory<Program>, IAsyn
       .SingleOrDefaultAsync(refreshToken => refreshToken.Token == token);
   }
 
+  public async Task<IReadOnlyList<RefreshTokenEntity>> GetRefreshTokensByUserIdAsync(Guid userId)
+  {
+    await using var scope = Services.CreateAsyncScope();
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    return await dbContext.RefreshTokens
+      .AsNoTracking()
+      .Where(refreshToken => refreshToken.UserId == userId)
+      .OrderBy(refreshToken => refreshToken.CreatedAt)
+      .ToListAsync();
+  }
+
   async Task IAsyncLifetime.DisposeAsync()
   {
     await DisposeAsync();
