@@ -7,19 +7,14 @@ public sealed class LogoutUserUseCase(
   IRefreshTokenRepository refreshTokenRepository,
   IUnitOfWork unitOfWork)
 {
-  public async Task<Result> ExecuteAsync(
-    LogoutUserRequest request,
-    CancellationToken cancellationToken
-  )
+  public async Task<Result> ExecuteAsync(LogoutUserRequest request, CancellationToken cancellationToken)
   {
     if (string.IsNullOrWhiteSpace(request.RefreshToken))
     {
       return Result.Failure(LogoutUserErrors.RefreshTokenRequired);
     }
 
-    var refreshToken = await refreshTokenRepository.GetByTokenAsync(
-      request.RefreshToken,
-      cancellationToken);
+    var refreshToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);
 
     if (refreshToken is null || !refreshToken.IsActive)
     {

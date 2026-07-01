@@ -15,9 +15,7 @@ public sealed class LoginUserUseCase(
   IPermissionRepository permissionRepository,
   IUnitOfWork unitOfWork)
 {
-  public async Task<Result<LoginUserResponse>> ExecuteAsync(
-    LoginUserRequest request, 
-    CancellationToken cancellationToken = default)
+  public async Task<Result<LoginUserResponse>> ExecuteAsync(LoginUserRequest request, CancellationToken cancellationToken = default)
   {
     var validationError = Validate(request);
     if (validationError is not null)
@@ -41,9 +39,7 @@ public sealed class LoginUserUseCase(
       CreateResponse(user, accessToken, refreshToken.Token));
   }
 
-  private async Task<User?> GetAuthenticatedUserAsync(
-    LoginUserRequest request,
-    CancellationToken cancellationToken)
+  private async Task<User?> GetAuthenticatedUserAsync(LoginUserRequest request, CancellationToken cancellationToken)
   {
     var email = NormalizeEmail(request.Email);
 
@@ -53,22 +49,16 @@ public sealed class LoginUserUseCase(
       return null;
     }
 
-    var passwordIsValid = passwordHasher.Verify(
-      request.Password, 
-      user.PasswordHash);
+    var passwordIsValid = passwordHasher.Verify(request.Password, user.PasswordHash);
 
     return passwordIsValid && user.Active
       ? user 
       : null;
   }
 
-  private async Task<string> GenerateAccessTokenAsync(
-    User user,
-    CancellationToken cancellationToken)
+  private async Task<string> GenerateAccessTokenAsync(User user, CancellationToken cancellationToken)
   {
-    var permissions = await permissionRepository.GetByUserIdAsync(
-      user.Id,
-      cancellationToken);
+    var permissions = await permissionRepository.GetByUserIdAsync(user.Id, cancellationToken);
 
     return accessTokenGenerator.Generate(user, permissions);
   }
@@ -77,16 +67,10 @@ public sealed class LoginUserUseCase(
   {
     var refreshTokenValue = refreshTokenGenerator.Generate();
 
-    return new RefreshTokenEntity(
-      refreshTokenValue,
-      DateTime.UtcNow.AddDays(7),
-      user.Id);
+    return new RefreshTokenEntity(refreshTokenValue, DateTime.UtcNow.AddDays(7), user.Id);
   }
 
-  private static LoginUserResponse CreateResponse(
-    User user,
-    string accessToken,
-    string refreshToken)
+  private static LoginUserResponse CreateResponse(User user, string accessToken, string refreshToken)
   {
     return new LoginUserResponse(
       user.Id,

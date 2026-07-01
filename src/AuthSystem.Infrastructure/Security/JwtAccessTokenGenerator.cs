@@ -8,12 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AuthSystem.Infrastructure.Security;
 
-public sealed class JwtAccessTokenGenerator(
-  IOptions<JwtSettings> jwtOptions) : IAccessTokenGenerator
+public sealed class JwtAccessTokenGenerator(IOptions<JwtSettings> jwtOptions) : IAccessTokenGenerator
 {
-  public string Generate(
-    User user,
-    IReadOnlyCollection<string> permissions)
+  public string Generate(User user, IReadOnlyCollection<string> permissions)
   {
     var settings = jwtOptions.Value;
 

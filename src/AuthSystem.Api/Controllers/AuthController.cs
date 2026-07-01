@@ -16,9 +16,7 @@ public sealed class AuthController(
   LogoutUserUseCase logoutUserUseCase) : ControllerBase
 {
   [HttpPost("refresh")]
-  public async Task<IActionResult> RefreshToken(
-    RefreshTokenRequest request,
-    CancellationToken cancellationToken)
+  public async Task<IActionResult> RefreshToken(RefreshTokenRequest request, CancellationToken cancellationToken)
   {
     var result = await refreshTokenUseCase.ExecuteAsync(request, cancellationToken);
 
@@ -31,9 +29,7 @@ public sealed class AuthController(
   }
 
   [HttpPost("register")]
-  public async Task<IActionResult> Register(
-    RegisterUserRequest request,
-    CancellationToken cancellationToken)
+  public async Task<IActionResult> Register(RegisterUserRequest request, CancellationToken cancellationToken)
   {
     var result = await registerUserUseCase.ExecuteAsync(request, cancellationToken);
 
@@ -46,9 +42,7 @@ public sealed class AuthController(
   }
 
   [HttpPost("login")]
-  public async Task<IActionResult> Login(
-    LoginUserRequest request,
-    CancellationToken cancellationToken)
+  public async Task<IActionResult> Login(LoginUserRequest request, CancellationToken cancellationToken)
   {
     var result = await loginUserUseCase.ExecuteAsync(request, cancellationToken);
 
@@ -61,9 +55,7 @@ public sealed class AuthController(
   }
 
   [HttpPost("logout")]
-  public async Task<IActionResult> Logout(
-    LogoutUserRequest request,
-    CancellationToken cancellationToken)
+  public async Task<IActionResult> Logout(LogoutUserRequest request, CancellationToken cancellationToken)
   {
     var result = await logoutUserUseCase.ExecuteAsync(request, cancellationToken);
 

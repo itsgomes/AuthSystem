@@ -25,9 +25,9 @@ public sealed class ProfileController : ControllerBase
 
     return Ok(new
     {
-        sub,
-        email,
-        name
+      sub,
+      email,
+      name
     });
   }
 }

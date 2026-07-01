@@ -6,9 +6,7 @@ namespace AuthSystem.Api.Extensions;
 
 public static class AuthenticationExtensions
 {
-  public static IServiceCollection AddJwtAuthentication(
-    this IServiceCollection services,
-    IConfiguration configuration)
+  public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
   {
     var jwtSettings = configuration.GetSection("Jwt");
 
@@ -27,8 +25,7 @@ public static class AuthenticationExtensions
 
           ValidIssuer = jwtSettings["Issuer"],
           ValidAudience = jwtSettings["Audience"],
-          IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!))
+          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!))
         };
       });
 

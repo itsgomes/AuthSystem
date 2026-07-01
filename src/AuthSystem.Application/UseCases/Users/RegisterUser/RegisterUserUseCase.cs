@@ -10,9 +10,7 @@ public sealed class RegisterUserUseCase(
   IPasswordHasher passwordHasher,
   IUnitOfWork unitOfWork)
 {
-  public async Task<Result<RegisterUserResponse>> ExecuteAsync(
-    RegisterUserRequest request,
-    CancellationToken cancellationToken = default)
+  public async Task<Result<RegisterUserResponse>> ExecuteAsync(RegisterUserRequest request, CancellationToken cancellationToken = default)
   {
     var validationError = Validate(request);
     if (validationError is not null)
