@@ -3,6 +3,7 @@ using AuthSystem.Application.UseCases.Users.LoginUser;
 using AuthSystem.Application.UseCases.Users.RegisterUser;
 using Microsoft.AspNetCore.Mvc;
 using AuthSystem.Application.UseCases.Users.RefreshToken;
+using AuthSystem.Application.UseCases.Users.DeactivateUser;
 
 namespace AuthSystem.Api.Common;
 
@@ -14,6 +15,8 @@ public static class ApiResults
     {
       var code when code == RegisterUserErrors.EmailAlreadyExists.Code => new ConflictObjectResult(error),
       
+      var code when code == DeactivateUserErrors.UserNotFound.Code => new NotFoundObjectResult(error),
+
       var code when 
         code == LoginUserErrors.InvalidCredentials.Code || 
         code == RefreshTokenErrors.InvalidRefreshToken.Code ||

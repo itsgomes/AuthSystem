@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using RefreshTokenEntity = AuthSystem.Domain.Entities.RefreshToken;
+using UserEntity = AuthSystem.Domain.Entities.User;
 
 namespace AuthSystem.Api.IntegrationTests.Infrastructure;
 
@@ -46,6 +47,31 @@ public sealed class PostgreSqlApiFactory : WebApplicationFactory<Program>, IAsyn
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     await dbContext.Database.MigrateAsync();
+  }
+
+  public async Task<UserEntity?> GetUserAsync(Guid userId)
+  {
+    await using var scope = Services.CreateAsyncScope();
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    return await dbContext.Users
+      .AsNoTracking()
+      .SingleOrDefaultAsync(user => user.Id == userId);
+  }
+
+  public async Task ActivateUserAsync(Guid userId)
+  {
+    await using var scope = Services.CreateAsyncScope();
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    var user = await dbContext.Users
+      .SingleAsync(user => user.Id == userId);
+
+    user.Activate();
+
+    await dbContext.SaveChangesAsync();
   }
 
   public async Task DeactivateUserAsync(string email)

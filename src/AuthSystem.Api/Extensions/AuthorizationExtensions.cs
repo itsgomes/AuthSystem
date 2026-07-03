@@ -8,10 +8,8 @@ public static class AuthorizationExtensions
   public static IServiceCollection AddPolicyAuthorization(this IServiceCollection services)
   {
     services.AddAuthorizationBuilder()
-      .AddPolicy(Policies.ProfileRead, policy =>
-      {
-        policy.RequireClaim(JwtClaimNames.Permission, Permissions.ProfileRead);
-      });
+      .AddPolicy(Policies.ProfileRead, policy => { policy.RequireClaim(JwtClaimNames.Permission, Permissions.ProfileRead); })
+      .AddPolicy(Policies.UsersDeactivate, policy => { policy.RequireClaim(JwtClaimNames.Permission, Permissions.UsersDeactivate); });
 
     return services;
   }

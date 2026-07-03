@@ -1,3 +1,4 @@
+using AuthSystem.Application.UseCases.Users.DeactivateUser;
 using AuthSystem.Application.UseCases.Users.LoginUser;
 using AuthSystem.Application.UseCases.Users.LogoutUser;
 using AuthSystem.Application.UseCases.Users.RefreshToken;
@@ -14,6 +15,7 @@ public static class DependencyInjection
     services.AddScoped<LoginUserUseCase>();
     services.AddScoped<RefreshTokenUseCase>();
     services.AddScoped<LogoutUserUseCase>();
+    services.AddScoped<DeactivateUserUseCase>();
 
     return services;
   }

@@ -5,6 +5,7 @@ public class RefreshToken
 	public const string RotatedReason = "Rotated";
 	public const string ReuseDetectedReason = "ReuseDetected";
 	public const string LogoutReason = "Logout";
+	public const string UserDeactivatedReason = "UserDeactivated";
 
 	public Guid Id { get; private set; }
 	public string TokenHash { get; private set; } = string.Empty;
@@ -65,5 +66,10 @@ public class RefreshToken
 	public void RevokeDueToLogout()
 	{
 		Revoke(LogoutReason);
+	}
+
+	public void RevokeDueToUserDeactivation()
+	{
+		Revoke(UserDeactivatedReason);
 	}
 }
